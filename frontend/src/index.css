@@ -739,11 +739,15 @@ select option {
 
   .item-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .item-actions input {
+    flex: 1 1 100%;
+  }
+
+  .item-actions .btn {
     flex: 1;
-    width: auto;
   }
 
   .inline-form {
