@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Person {
+  id    Int            @id @default(autoincrement())
+  name  String
+  items PurchaseItem[] // A person can have multiple items requested
+}
+
+model PurchaseItem {
+  id          Int      @id @default(autoincrement())
+  itemName    String
+  quantity    String
+  personId    Int
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  moneyGiven  Float
+  actualPrice Float?   // Optional: Empty until Uncle buys it
+  status      String   @default("PENDING") // 'PENDING' or 'BOUGHT'
+  createdAt   DateTime @default(now()) // Timestamp for our 1-month auto-cleanup
+}
