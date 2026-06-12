@@ -6,7 +6,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
   const [activeBudget, setActiveBudget] = useState(null);
   const [masterItems, setMasterItems] = useState([]);
   
-  // Modals / Forms
+  // Forms
   const [showNewMonthForm, setShowNewMonthForm] = useState(false);
   const [newMonthData, setNewMonthData] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), allocatedAmount: '' });
   
@@ -14,7 +14,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
   const [newItemName, setNewItemName] = useState('');
   const [newItemUnit, setNewItemUnit] = useState('kg');
 
-  const [activeTab, setActiveTab] = useState('plan'); // 'plan' or 'purchases' or 'summary'
+  const [activeTab, setActiveTab] = useState('plan');
 
   // Load Initial Data
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
     e.preventDefault();
     try {
       const newB = await api.addBudget(newMonthData);
-      showToast('New month started!', 'success');
+      showToast('New month started');
       setShowNewMonthForm(false);
       loadBudgets();
       selectBudget(newB.id);
@@ -71,7 +71,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
     if (!isAdmin) return showToast('Admin only', 'error');
     try {
       await api.addMasterItem({ name: newItemName, defaultUnit: newItemUnit });
-      showToast('Item added to Master List', 'success');
+      showToast('Item added to master list');
       setNewItemName('');
       setShowMasterItemForm(false);
       loadMasterItems();
@@ -91,7 +91,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
     
     try {
       await api.addRationPlan(activeBudget.id, { masterItemId, plannedQuantity });
-      showToast('Added to plan', 'success');
+      showToast('Added to plan');
       e.target.reset();
       selectBudget(activeBudget.id);
     } catch (err) {
@@ -121,7 +121,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
 
     try {
       await api.addRationPurchase(activeBudget.id, { masterItemId, quantityBought, cost });
-      showToast('Purchase logged successfully', 'success');
+      showToast('Purchase logged');
       e.target.reset();
       selectBudget(activeBudget.id);
     } catch (err) {
@@ -151,38 +151,41 @@ export default function MonthlyRation({ isAdmin, showToast }) {
 
   return (
     <div className="monthly-ration-container">
-      {/* Month Selector Header */}
-      <div className="glass-card flex-between no-print">
-        <div className="month-selector">
-          <select 
-            value={activeBudget?.id || ''} 
-            onChange={(e) => selectBudget(e.target.value)}
-            className="month-dropdown"
-          >
-            {budgets.map(b => (
-              <option key={b.id} value={b.id}>
-                {getMonthName(b.month)} {b.year}
-              </option>
-            ))}
-          </select>
-          {isAdmin && (
-            <button className="btn btn-ghost" onClick={() => setShowNewMonthForm(!showNewMonthForm)}>
-              + New Month
-            </button>
-          )}
+      {/* Month Selector & Budget Overview */}
+      <div className="glass-card no-print">
+        <div className="flex-between">
+          <div className="month-selector">
+            <select 
+              value={activeBudget?.id || ''} 
+              onChange={(e) => selectBudget(e.target.value)}
+              className="month-dropdown"
+            >
+              {budgets.length === 0 && <option value="">No months yet</option>}
+              {budgets.map(b => (
+                <option key={b.id} value={b.id}>
+                  {getMonthName(b.month)} {b.year}
+                </option>
+              ))}
+            </select>
+            {isAdmin && (
+              <button className="btn btn-ghost" onClick={() => setShowNewMonthForm(!showNewMonthForm)}>
+                + New Month
+              </button>
+            )}
+          </div>
         </div>
 
         {activeBudget && (
           <div className="budget-stats">
             <div className="stat">
-              <span className="stat-label">Starting Budget</span>
+              <span className="stat-label">Budget</span>
               <span className="stat-value">Rs {activeBudget.allocatedAmount.toLocaleString()}</span>
             </div>
             <div className="stat">
-              <span className="stat-label">Total Spent</span>
+              <span className="stat-label">Spent</span>
               <span className="stat-value text-danger">Rs {activeBudget.totalSpent?.toLocaleString() || 0}</span>
             </div>
-            <div className="stat highlight">
+            <div className="stat">
               <span className="stat-label">Remaining</span>
               <span className="stat-value text-success">Rs {activeBudget.remainingBalance?.toLocaleString() || 0}</span>
             </div>
@@ -190,33 +193,36 @@ export default function MonthlyRation({ isAdmin, showToast }) {
         )}
       </div>
 
+      {/* New Month Form (collapsible) */}
       {showNewMonthForm && (
-        <form onSubmit={handleStartMonth} className="glass-card form-row no-print">
-          <div className="form-group">
-            <label>Month (1-12)</label>
-            <input type="number" min="1" max="12" value={newMonthData.month} onChange={e => setNewMonthData({...newMonthData, month: e.target.value})} required />
-          </div>
-          <div className="form-group">
-            <label>Year</label>
-            <input type="number" value={newMonthData.year} onChange={e => setNewMonthData({...newMonthData, year: e.target.value})} required />
-          </div>
-          <div className="form-group">
-            <label>Budget (Rs)</label>
-            <input type="number" value={newMonthData.allocatedAmount} onChange={e => setNewMonthData({...newMonthData, allocatedAmount: e.target.value})} required />
-          </div>
-          <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button type="submit" className="btn btn-primary btn-full">Start Month</button>
+        <form onSubmit={handleStartMonth} className="glass-card no-print">
+          <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
+            <div className="form-group">
+              <label>Month (1-12)</label>
+              <input type="number" min="1" max="12" value={newMonthData.month} onChange={e => setNewMonthData({...newMonthData, month: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Year</label>
+              <input type="number" value={newMonthData.year} onChange={e => setNewMonthData({...newMonthData, year: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Budget (Rs)</label>
+              <input type="number" value={newMonthData.allocatedAmount} onChange={e => setNewMonthData({...newMonthData, allocatedAmount: e.target.value})} required />
+            </div>
+            <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button type="submit" className="btn btn-primary">Start</button>
+            </div>
           </div>
         </form>
       )}
 
-      {/* Tabs */}
+      {/* Sub-tabs */}
       {activeBudget && (
         <div className="ration-tabs no-print">
-          <button className={`tab ${activeTab === 'plan' ? 'active' : ''}`} onClick={() => setActiveTab('plan')}>📝 Planned List</button>
-          <button className={`tab ${activeTab === 'purchases' ? 'active' : ''}`} onClick={() => setActiveTab('purchases')}>🛒 Log Purchase</button>
-          <button className={`tab ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}>📊 Monthly Summary</button>
-          {isAdmin && <button className={`tab ${activeTab === 'master' ? 'active' : ''}`} onClick={() => setActiveTab('master')}>⚙️ Master Items</button>}
+          <button className={`tab ${activeTab === 'plan' ? 'active' : ''}`} onClick={() => setActiveTab('plan')}>Planned List</button>
+          <button className={`tab ${activeTab === 'purchases' ? 'active' : ''}`} onClick={() => setActiveTab('purchases')}>Purchases</button>
+          <button className={`tab ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}>Summary</button>
+          {isAdmin && <button className={`tab ${activeTab === 'master' ? 'active' : ''}`} onClick={() => setActiveTab('master')}>Master Items</button>}
         </div>
       )}
 
@@ -224,24 +230,24 @@ export default function MonthlyRation({ isAdmin, showToast }) {
       {activeBudget && activeTab === 'plan' && (
         <div className="glass-card print-card">
           <div className="card-header no-print">
-            <h2>📝 Planned List for {getMonthName(activeBudget.month)}</h2>
-            <button className="btn btn-ghost" onClick={handlePrint}>🖨️ Print List</button>
+            <h2>Planned List — {getMonthName(activeBudget.month)}</h2>
+            <button className="btn btn-ghost" onClick={handlePrint}>Print</button>
           </div>
 
           <div className="print-only-header">
-            <h2>Shopping List - {getMonthName(activeBudget.month)} {activeBudget.year}</h2>
+            <h2>Shopping List — {getMonthName(activeBudget.month)} {activeBudget.year}</h2>
           </div>
 
           {isAdmin && (
             <form onSubmit={handleAddToPlan} className="inline-form mb-4 no-print">
               <select name="masterItemId" required>
-                <option value="">-- Select Item --</option>
+                <option value="">Select item...</option>
                 {masterItems.map(item => (
                   <option key={item.id} value={item.id}>{item.name} ({item.defaultUnit})</option>
                 ))}
               </select>
-              <input type="number" step="0.01" name="plannedQuantity" placeholder="Qty needed" required />
-              <button type="submit" className="btn btn-primary">Add to Plan</button>
+              <input type="number" step="0.01" name="plannedQuantity" placeholder="Quantity" required />
+              <button type="submit" className="btn btn-primary">Add</button>
             </form>
           )}
 
@@ -250,19 +256,21 @@ export default function MonthlyRation({ isAdmin, showToast }) {
               <div key={plan.id} className="item-row print-row">
                 <div className="print-checkbox"></div>
                 <div className="item-info">
-                  <h3>{plan.masterItem.name}</h3>
-                  <span className="qty">{plan.plannedQuantity} {plan.masterItem.defaultUnit} needed</span>
+                  <h3>
+                    {plan.masterItem.name}
+                    <span className="qty">{plan.plannedQuantity} {plan.masterItem.defaultUnit}</span>
+                  </h3>
                 </div>
                 {isAdmin && (
                   <div className="item-actions no-print">
-                    <button className="btn btn-danger-outline" onClick={() => handleDeletePlan(plan.id)}>✕</button>
+                    <button className="btn btn-danger-outline" onClick={() => handleDeletePlan(plan.id)} style={{padding: '4px 10px', fontSize: '0.75rem'}}>Remove</button>
                   </div>
                 )}
               </div>
             ))}
             {(!activeBudget.plans || activeBudget.plans.length === 0) && (
               <div className="empty-state no-print">
-                <p>No items planned for this month yet.</p>
+                <p>No items planned yet. Use the form above to add items.</p>
               </div>
             )}
           </div>
@@ -273,20 +281,20 @@ export default function MonthlyRation({ isAdmin, showToast }) {
       {activeBudget && activeTab === 'purchases' && (
         <div className="glass-card">
           <div className="card-header">
-            <h2>🛒 Log a Purchase</h2>
+            <h2>Log a Purchase</h2>
           </div>
 
           {isAdmin && (
             <form onSubmit={handleLogPurchase} className="inline-form mb-4">
               <select name="masterItemId" required>
-                <option value="">-- What did you buy? --</option>
+                <option value="">What did you buy?</option>
                 {masterItems.map(item => (
                   <option key={item.id} value={item.id}>{item.name} ({item.defaultUnit})</option>
                 ))}
               </select>
-              <input type="number" step="0.01" name="quantityBought" placeholder="Qty bought" required />
-              <input type="number" step="0.01" name="cost" placeholder="Total Cost (Rs)" required />
-              <button type="submit" className="btn btn-success">Save Purchase</button>
+              <input type="number" step="0.01" name="quantityBought" placeholder="Qty" required />
+              <input type="number" step="0.01" name="cost" placeholder="Total cost (Rs)" required />
+              <button type="submit" className="btn btn-success">Save</button>
             </form>
           )}
 
@@ -295,10 +303,12 @@ export default function MonthlyRation({ isAdmin, showToast }) {
             {activeBudget.purchases?.map(p => (
               <div key={p.id} className="item-row">
                 <div className="item-info">
-                  <h3>{p.masterItem.name}</h3>
-                  <span className="qty">{p.quantityBought} {p.masterItem.defaultUnit}</span>
+                  <h3>
+                    {p.masterItem.name}
+                    <span className="qty">{p.quantityBought} {p.masterItem.defaultUnit}</span>
+                  </h3>
                   <div className="item-meta">
-                    <span>📅 {new Date(p.createdAt).toLocaleDateString()}</span>
+                    <span>{new Date(p.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
                 <div className="item-result">
@@ -322,41 +332,43 @@ export default function MonthlyRation({ isAdmin, showToast }) {
       {activeBudget && activeTab === 'summary' && (
         <div className="glass-card">
           <div className="card-header">
-            <h2>📊 Monthly Aggregated Summary</h2>
+            <h2>Monthly Summary — {getMonthName(activeBudget.month)} {activeBudget.year}</h2>
           </div>
           <div className="summary-list">
-            <div className="item-row" style={{borderBottom: '2px solid var(--surface-border)'}}>
-              <div className="item-info"><strong>Item</strong></div>
-              <div className="item-info text-center"><strong>Total Bought</strong></div>
-              <div className="item-result"><strong>Total Spent</strong></div>
-            </div>
+            {activeBudget.summary?.length > 0 && (
+              <div className="summary-header">
+                <span>Item</span>
+                <span>Total Bought</span>
+                <span>Total Spent</span>
+              </div>
+            )}
             {activeBudget.summary?.map(sum => (
               <div key={sum.name} className="item-row">
                 <div className="item-info">
                   <h3>{sum.name}</h3>
                 </div>
-                <div className="item-info text-center">
+                <div style={{ width: '120px', textAlign: 'center' }}>
                   <span className="qty">{sum.totalQty} {sum.unit}</span>
                 </div>
-                <div className="item-result">
-                  <div className="cost">Rs {sum.totalCost.toLocaleString()}</div>
+                <div style={{ width: '120px', textAlign: 'right' }}>
+                  <span className="cost">Rs {sum.totalCost.toLocaleString()}</span>
                 </div>
               </div>
             ))}
             {(!activeBudget.summary || activeBudget.summary.length === 0) && (
               <div className="empty-state">
-                <p>No data to summarize yet.</p>
+                <p>No data to summarize yet. Log some purchases first.</p>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* TAB: MASTER ITEMS (ADMIN ONLY) */}
+      {/* TAB: MASTER ITEMS (Admin only) */}
       {isAdmin && activeTab === 'master' && (
         <div className="glass-card">
           <div className="card-header">
-            <h2>⚙️ Master Items Dictionary</h2>
+            <h2>Master Items</h2>
             <button className="btn btn-ghost" onClick={() => setShowMasterItemForm(!showMasterItemForm)}>
               + Add Item
             </button>
@@ -364,7 +376,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
 
           {showMasterItemForm && (
             <form onSubmit={handleAddMasterItem} className="inline-form mb-4">
-              <input type="text" placeholder="Item Name (e.g. Flour)" value={newItemName} onChange={e => setNewItemName(e.target.value)} required />
+              <input type="text" placeholder="Item name (e.g. Flour)" value={newItemName} onChange={e => setNewItemName(e.target.value)} required />
               <select value={newItemUnit} onChange={e => setNewItemUnit(e.target.value)}>
                 <option value="kg">kg</option>
                 <option value="liters">liters</option>
@@ -380,7 +392,7 @@ export default function MonthlyRation({ isAdmin, showToast }) {
             {masterItems.map(item => (
               <div key={item.id} className="person-card neutral">
                 <h3>{item.name}</h3>
-                <span className="balance-label">Default unit: {item.defaultUnit}</span>
+                <span className="balance-label">Unit: {item.defaultUnit}</span>
                 <button className="delete-btn" onClick={async () => {
                   try {
                     await api.deleteMasterItem(item.id);
