@@ -231,6 +231,173 @@ app.post('/api/cleanup', async (req, res) => {
 });
 
 // ==========================================
+// ROUTES: Monthly Ration Management
+// ==========================================
+
+// Master Items
+app.get('/api/master-items', async (req, res) => {
+  try {
+    const items = await prisma.masterItem.findMany({ orderBy: { name: 'asc' } });
+    res.json(items);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch master items" });
+  }
+});
+
+app.post('/api/master-items', async (req, res) => {
+  try {
+    const { name, defaultUnit } = req.body;
+    const newItem = await prisma.masterItem.create({
+      data: { name, defaultUnit: defaultUnit || 'kg' }
+    });
+    res.json(newItem);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create master item" });
+  }
+});
+
+app.delete('/api/master-items/:id', async (req, res) => {
+  try {
+    await prisma.masterItem.delete({ where: { id: parseInt(req.params.id) } });
+    res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete master item" });
+  }
+});
+
+// Monthly Budgets
+app.get('/api/budgets', async (req, res) => {
+  try {
+    const budgets = await prisma.monthlyBudget.findMany({
+      orderBy: [{ year: 'desc' }, { month: 'desc' }]
+    });
+    res.json(budgets);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch budgets" });
+  }
+});
+
+app.post('/api/budgets', async (req, res) => {
+  try {
+    const { month, year, allocatedAmount } = req.body;
+    const newBudget = await prisma.monthlyBudget.create({
+      data: {
+        month: parseInt(month),
+        year: parseInt(year),
+        allocatedAmount: parseFloat(allocatedAmount)
+      }
+    });
+    res.json(newBudget);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create budget (maybe it already exists)" });
+  }
+});
+
+app.get('/api/budgets/:id', async (req, res) => {
+  try {
+    const budgetId = parseInt(req.params.id);
+    const budget = await prisma.monthlyBudget.findUnique({
+      where: { id: budgetId },
+      include: {
+        plans: { include: { masterItem: true } },
+        purchases: { include: { masterItem: true }, orderBy: { createdAt: 'desc' } }
+      }
+    });
+    
+    if (!budget) return res.status(404).json({ error: "Budget not found" });
+
+    // Calculate aggregated summary
+    let totalSpent = 0;
+    const itemSummary = {};
+
+    budget.purchases.forEach(p => {
+      totalSpent += p.cost;
+      if (!itemSummary[p.masterItemId]) {
+        itemSummary[p.masterItemId] = {
+          name: p.masterItem.name,
+          unit: p.masterItem.defaultUnit,
+          totalQty: 0,
+          totalCost: 0
+        };
+      }
+      itemSummary[p.masterItemId].totalQty += p.quantityBought;
+      itemSummary[p.masterItemId].totalCost += p.cost;
+    });
+
+    res.json({
+      ...budget,
+      totalSpent,
+      remainingBalance: budget.allocatedAmount - totalSpent,
+      summary: Object.values(itemSummary)
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch budget details" });
+  }
+});
+
+// Ration Plans
+app.post('/api/budgets/:id/plan', async (req, res) => {
+  try {
+    const { masterItemId, plannedQuantity } = req.body;
+    const plan = await prisma.rationPlan.upsert({
+      where: {
+        monthlyBudgetId_masterItemId: {
+          monthlyBudgetId: parseInt(req.params.id),
+          masterItemId: parseInt(masterItemId)
+        }
+      },
+      update: { plannedQuantity: parseFloat(plannedQuantity) },
+      create: {
+        monthlyBudgetId: parseInt(req.params.id),
+        masterItemId: parseInt(masterItemId),
+        plannedQuantity: parseFloat(plannedQuantity)
+      },
+      include: { masterItem: true }
+    });
+    res.json(plan);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to add to plan" });
+  }
+});
+
+app.delete('/api/plans/:id', async (req, res) => {
+  try {
+    await prisma.rationPlan.delete({ where: { id: parseInt(req.params.id) } });
+    res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete plan" });
+  }
+});
+
+// Ration Purchases
+app.post('/api/budgets/:id/purchase', async (req, res) => {
+  try {
+    const { masterItemId, quantityBought, cost } = req.body;
+    const purchase = await prisma.rationPurchase.create({
+      data: {
+        monthlyBudgetId: parseInt(req.params.id),
+        masterItemId: parseInt(masterItemId),
+        quantityBought: parseFloat(quantityBought),
+        cost: parseFloat(cost)
+      },
+      include: { masterItem: true }
+    });
+    res.json(purchase);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to log purchase" });
+  }
+});
+
+app.delete('/api/purchases/:id', async (req, res) => {
+  try {
+    await prisma.rationPurchase.delete({ where: { id: parseInt(req.params.id) } });
+    res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete purchase" });
+  }
+});
+
+// ==========================================
 // SERVE STATIC FRONTEND (For Production)
 // ==========================================
 // Serve the static files from the React app

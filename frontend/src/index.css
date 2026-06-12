@@ -778,3 +778,150 @@ select option {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================
+   MONTHLY RATION STYLES
+   ========================================== */
+.ration-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  border-radius: var(--radius-md);
+}
+
+.ration-tabs .tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ration-tabs .tab:hover {
+  color: var(--text-main);
+}
+
+.ration-tabs .tab.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.month-selector {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.month-dropdown {
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid var(--surface-border);
+  color: var(--text-main);
+  padding: 8px 36px 8px 16px;
+  min-width: 200px;
+}
+
+.budget-stats {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.budget-stats .stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.print-only-header {
+  display: none;
+}
+
+.print-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--surface-border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: none;
+}
+
+/* ==========================================
+   PRINT MEDIA QUERIES
+   ========================================== */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  .no-print, .app-header, .ration-tabs, .admin-toggle, .btn {
+    display: none !important;
+  }
+  .print-card {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+  .print-only-header {
+    display: block;
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid black;
+    padding-bottom: 10px;
+  }
+  .print-only-header h2 {
+    color: black;
+    font-size: 24px;
+  }
+  .print-row {
+    border-bottom: 1px solid #ccc !important;
+    padding: 10px 0 !important;
+    color: black !important;
+    display: flex;
+    align-items: center;
+  }
+  .print-row h3 {
+    color: black;
+  }
+  .print-checkbox {
+    display: block;
+    border-color: #000;
+  }
+  .qty {
+    color: #444 !important;
+  }
+}

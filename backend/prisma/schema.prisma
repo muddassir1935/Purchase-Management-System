@@ -25,3 +25,45 @@ model PurchaseItem {
   status      String   @default("PENDING") // 'PENDING' or 'BOUGHT'
   createdAt   DateTime @default(now()) // Timestamp for our 1-month auto-cleanup
 }
+
+model MasterItem {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  defaultUnit String   @default("kg")
+  plans       RationPlan[]
+  purchases   RationPurchase[]
+}
+
+model MonthlyBudget {
+  id               Int      @id @default(autoincrement())
+  month            Int
+  year             Int
+  allocatedAmount  Float
+  createdAt        DateTime @default(now())
+  plans            RationPlan[]
+  purchases        RationPurchase[]
+
+  @@unique([month, year])
+}
+
+model RationPlan {
+  id              Int      @id @default(autoincrement())
+  monthlyBudgetId Int
+  monthlyBudget   MonthlyBudget @relation(fields: [monthlyBudgetId], references: [id], onDelete: Cascade)
+  masterItemId    Int
+  masterItem      MasterItem    @relation(fields: [masterItemId], references: [id], onDelete: Cascade)
+  plannedQuantity Float
+
+  @@unique([monthlyBudgetId, masterItemId])
+}
+
+model RationPurchase {
+  id              Int      @id @default(autoincrement())
+  monthlyBudgetId Int
+  monthlyBudget   MonthlyBudget @relation(fields: [monthlyBudgetId], references: [id], onDelete: Cascade)
+  masterItemId    Int
+  masterItem      MasterItem    @relation(fields: [masterItemId], references: [id], onDelete: Cascade)
+  quantityBought  Float
+  cost            Float
+  createdAt       DateTime @default(now())
+}

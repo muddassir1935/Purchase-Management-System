@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as api from './api';
+import MonthlyRation from './MonthlyRation';
 
 function App() {
   // ==========================================
   // STATE
   // ==========================================
+  const [appMode, setAppMode] = useState('ration'); // 'requests' or 'ration'
   const [people, setPeople] = useState([]);
   const [items, setItems] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -234,8 +236,17 @@ function App() {
           )}
         </header>
 
-        {/* --- BALANCES SECTION --- */}
-        <div className="glass-card">
+        <div className="ration-tabs no-print" style={{ marginBottom: '1.5rem', display: 'flex', gap: '8px' }}>
+          <button className={`tab ${appMode === 'ration' ? 'active' : ''}`} style={{ flex: 1, padding: '12px' }} onClick={() => setAppMode('ration')}>🛒 Monthly Ration</button>
+          <button className={`tab ${appMode === 'requests' ? 'active' : ''}`} style={{ flex: 1, padding: '12px' }} onClick={() => setAppMode('requests')}>👥 Family Requests</button>
+        </div>
+
+        {appMode === 'ration' && <MonthlyRation isAdmin={isAdmin} showToast={showToast} />}
+
+        {appMode === 'requests' && (
+          <>
+            {/* --- BALANCES SECTION --- */}
+            <div className="glass-card">
           <div className="card-header">
             <h2><span className="icon">👥</span> Family Members</h2>
           </div>
@@ -407,7 +418,9 @@ function App() {
               )}
             </>
           )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

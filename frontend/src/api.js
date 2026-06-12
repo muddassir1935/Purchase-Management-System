@@ -81,3 +81,83 @@ export const verifyPin = async (pin) => {
   if (!res.ok) throw new Error('Auth request failed');
   return res.json();
 };
+
+// ==========================================
+// Monthly Ration Management
+// ==========================================
+
+export const getMasterItems = async () => {
+  const res = await fetch(`${API_URL}/master-items`);
+  if (!res.ok) throw new Error('Failed to fetch master items');
+  return res.json();
+};
+
+export const addMasterItem = async (data) => {
+  const res = await fetch(`${API_URL}/master-items`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to add master item');
+  return res.json();
+};
+
+export const deleteMasterItem = async (id) => {
+  const res = await fetch(`${API_URL}/master-items/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete master item');
+  return res.json();
+};
+
+export const getBudgets = async () => {
+  const res = await fetch(`${API_URL}/budgets`);
+  if (!res.ok) throw new Error('Failed to fetch budgets');
+  return res.json();
+};
+
+export const getBudgetDetails = async (id) => {
+  const res = await fetch(`${API_URL}/budgets/${id}`);
+  if (!res.ok) throw new Error('Failed to fetch budget details');
+  return res.json();
+};
+
+export const addBudget = async (data) => {
+  const res = await fetch(`${API_URL}/budgets`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to add budget');
+  return res.json();
+};
+
+export const addRationPlan = async (budgetId, data) => {
+  const res = await fetch(`${API_URL}/budgets/${budgetId}/plan`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to add to plan');
+  return res.json();
+};
+
+export const deleteRationPlan = async (id) => {
+  const res = await fetch(`${API_URL}/plans/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete plan');
+  return res.json();
+};
+
+export const addRationPurchase = async (budgetId, data) => {
+  const res = await fetch(`${API_URL}/budgets/${budgetId}/purchase`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to log purchase');
+  return res.json();
+};
+
+export const deleteRationPurchase = async (id) => {
+  const res = await fetch(`${API_URL}/purchases/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete purchase');
+  return res.json();
+};
