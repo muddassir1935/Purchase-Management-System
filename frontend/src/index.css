@@ -889,45 +889,69 @@ select option {
    PRINT MEDIA QUERIES
    ========================================== */
 @media print {
+  body::before {
+    display: none !important;
+  }
   body {
-    background: white;
-    color: black;
+    background: white !important;
+    color: black !important;
+  }
+  .app-container {
+    padding: 0 !important;
+    max-width: 100% !important;
   }
   .no-print, .app-header, .ration-tabs, .admin-toggle, .btn {
     display: none !important;
   }
-  .print-card {
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
+  .print-card, .glass-card {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   .print-only-header {
-    display: block;
-    text-align: center;
-    margin-bottom: 20px;
-    border-bottom: 2px solid black;
-    padding-bottom: 10px;
+    display: block !important;
+    text-align: center !important;
+    margin-bottom: 20px !important;
+    border-bottom: 2px solid black !important;
+    padding-bottom: 10px !important;
   }
   .print-only-header h2 {
-    color: black;
-    font-size: 24px;
-  }
-  .print-row {
-    border-bottom: 1px solid #ccc !important;
-    padding: 10px 0 !important;
     color: black !important;
-    display: flex;
-    align-items: center;
+    font-size: 24px !important;
+  }
+  .item-row.print-row {
+    border-bottom: 1px solid #ccc !important;
+    padding: 12px 0 !important;
+    color: black !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
   }
   .print-row h3 {
-    color: black;
+    color: black !important;
+    margin: 0 !important;
   }
   .print-checkbox {
-    display: block;
-    border-color: #000;
+    display: block !important;
+    width: 20px !important;
+    height: 20px !important;
+    border: 2px solid #000 !important;
+    border-radius: 4px !important;
+    margin-right: 15px !important;
+  }
+  .item-info {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 16px !important;
   }
   .qty {
     color: #444 !important;
+    font-size: 1rem !important;
   }
 }
