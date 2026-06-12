@@ -351,10 +351,16 @@ select option {
   display: flex;
   gap: 10px;
   align-items: stretch;
+  flex-wrap: wrap;
 }
 
-.inline-form input {
-  flex: 1;
+.inline-form input,
+.inline-form select {
+  flex: 1 1 120px;
+}
+
+.inline-form button {
+  white-space: nowrap;
 }
 
 /* ==========================================

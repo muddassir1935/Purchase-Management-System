@@ -18,19 +18,49 @@ app.use(express.json()); // Tells Express to parse incoming JSON data into JavaS
 // ==========================================
 async function cleanupOldRecords() {
   try {
+    // 1. Cleanup old individual purchase items (Family Requests)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const deleted = await prisma.purchaseItem.deleteMany({
+    const deletedItems = await prisma.purchaseItem.deleteMany({
       where: {
         createdAt: { lt: thirtyDaysAgo },
-        status: 'BOUGHT' // Only auto-delete bought items older than 30 days
+        status: 'BOUGHT'
       }
     });
 
-    if (deleted.count > 0) {
-      console.log(`🧹 Auto-cleanup: Removed ${deleted.count} records older than 30 days.`);
+    if (deletedItems.count > 0) {
+      console.log(`🧹 Auto-cleanup: Removed ${deletedItems.count} items older than 30 days.`);
     }
+
+    // 2. Cleanup old Monthly Budgets (Keep current and previous month only)
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // 1-12
+    const currentYear = today.getFullYear();
+    
+    let thresholdMonth = currentMonth - 1;
+    let thresholdYear = currentYear;
+    if (thresholdMonth < 1) {
+      thresholdMonth = 12;
+      thresholdYear--;
+    }
+
+    const deletedBudgets = await prisma.monthlyBudget.deleteMany({
+      where: {
+        OR: [
+          { year: { lt: thresholdYear } },
+          {
+            year: thresholdYear,
+            month: { lt: thresholdMonth }
+          }
+        ]
+      }
+    });
+
+    if (deletedBudgets.count > 0) {
+      console.log(`🧹 Auto-cleanup: Removed ${deletedBudgets.count} old monthly budgets.`);
+    }
+
   } catch (error) {
     console.error('Cleanup error:', error.message);
   }
