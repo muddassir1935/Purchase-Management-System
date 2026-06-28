@@ -140,6 +140,16 @@ export const addRationPlan = async (budgetId, data) => {
   return res.json();
 };
 
+export const addBulkRationPlan = async (budgetId, items) => {
+  const res = await fetch(`${API_URL}/budgets/${budgetId}/plan/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
+  if (!res.ok) throw new Error('Failed to bulk add to plan');
+  return res.json();
+};
+
 export const deleteRationPlan = async (id) => {
   const res = await fetch(`${API_URL}/plans/${id}`, { method: 'DELETE' });
   if (!res.ok) throw new Error('Failed to delete plan');

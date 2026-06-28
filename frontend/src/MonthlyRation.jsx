@@ -99,6 +99,39 @@ export default function MonthlyRation({ isAdmin, showToast }) {
     }
   };
 
+  const handleAddAllToPlan = async () => {
+    if (!isAdmin) return showToast('Admin only', 'error');
+    
+    if (masterItems.length === 0) {
+      return showToast('No master items available', 'error');
+    }
+
+    const qtyStr = window.prompt("Enter default quantity for all items (e.g. 1):", "1");
+    if (qtyStr === null) return; // User cancelled
+
+    const qty = parseFloat(qtyStr);
+    if (isNaN(qty) || qty <= 0) {
+      return showToast('Invalid quantity', 'error');
+    }
+
+    const existingMasterItemIds = new Set(activeBudget.plans?.map(p => p.masterItemId) || []);
+    const itemsToAdd = masterItems
+      .filter(m => !existingMasterItemIds.has(m.id))
+      .map(m => ({ masterItemId: m.id, plannedQuantity: qty }));
+
+    if (itemsToAdd.length === 0) {
+      return showToast('All items are already in the plan', 'error');
+    }
+
+    try {
+      await api.addBulkRationPlan(activeBudget.id, itemsToAdd);
+      showToast(`Added ${itemsToAdd.length} items to plan`);
+      selectBudget(activeBudget.id);
+    } catch (err) {
+      showToast('Error adding items to plan', 'error');
+    }
+  };
+
   const handleDeletePlan = async (id) => {
     if (!isAdmin) return;
     try {
@@ -239,16 +272,19 @@ export default function MonthlyRation({ isAdmin, showToast }) {
           </div>
 
           {isAdmin && (
-            <form onSubmit={handleAddToPlan} className="inline-form mb-4 no-print">
-              <select name="masterItemId" required>
-                <option value="">Select item...</option>
-                {masterItems.map(item => (
-                  <option key={item.id} value={item.id}>{item.name} ({item.defaultUnit})</option>
-                ))}
-              </select>
-              <input type="number" step="0.01" name="plannedQuantity" placeholder="Quantity" required />
-              <button type="submit" className="btn btn-primary">Add</button>
-            </form>
+            <div className="mb-4 no-print" style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <form onSubmit={handleAddToPlan} className="inline-form" style={{ flex: 1 }}>
+                <select name="masterItemId" required>
+                  <option value="">Select item...</option>
+                  {masterItems.map(item => (
+                    <option key={item.id} value={item.id}>{item.name} ({item.defaultUnit})</option>
+                  ))}
+                </select>
+                <input type="number" step="0.01" name="plannedQuantity" placeholder="Quantity" required />
+                <button type="submit" className="btn btn-primary">Add</button>
+              </form>
+              <button className="btn btn-ghost" onClick={handleAddAllToPlan} style={{ alignSelf: 'stretch' }}>Add All</button>
+            </div>
           )}
 
           <div className="plan-list">

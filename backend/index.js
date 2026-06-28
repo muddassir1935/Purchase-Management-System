@@ -390,6 +390,41 @@ app.post('/api/budgets/:id/plan', async (req, res) => {
   }
 });
 
+app.post('/api/budgets/:id/plan/bulk', async (req, res) => {
+  try {
+    const budgetId = parseInt(req.params.id);
+    const { items } = req.body; // Array of { masterItemId, plannedQuantity }
+
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: "items array is required" });
+    }
+
+    // Use Prisma transaction to upsert all items
+    const upserts = items.map(item => 
+      prisma.rationPlan.upsert({
+        where: {
+          monthlyBudgetId_masterItemId: {
+            monthlyBudgetId: budgetId,
+            masterItemId: parseInt(item.masterItemId)
+          }
+        },
+        update: { plannedQuantity: parseFloat(item.plannedQuantity) },
+        create: {
+          monthlyBudgetId: budgetId,
+          masterItemId: parseInt(item.masterItemId),
+          plannedQuantity: parseFloat(item.plannedQuantity)
+        }
+      })
+    );
+
+    const plans = await prisma.$transaction(upserts);
+    res.json(plans);
+  } catch (error) {
+    console.error('Bulk plan error:', error.message);
+    res.status(500).json({ error: "Failed to bulk add to plan" });
+  }
+});
+
 app.delete('/api/plans/:id', async (req, res) => {
   try {
     await prisma.rationPlan.delete({ where: { id: parseInt(req.params.id) } });
