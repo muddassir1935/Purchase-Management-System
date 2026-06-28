@@ -15,6 +15,8 @@ export default function MonthlyRation({ isAdmin, showToast }) {
   const [newItemUnit, setNewItemUnit] = useState('kg');
 
   const [activeTab, setActiveTab] = useState('plan');
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [editQuantity, setEditQuantity] = useState('');
 
   // Load Initial Data
   useEffect(() => {
@@ -129,6 +131,19 @@ export default function MonthlyRation({ isAdmin, showToast }) {
       selectBudget(activeBudget.id);
     } catch (err) {
       showToast('Error adding items to plan', 'error');
+    }
+  };
+
+  const handleSaveEditPlan = async (masterItemId) => {
+    if (!isAdmin) return;
+    if (!editQuantity) return;
+    try {
+      await api.addRationPlan(activeBudget.id, { masterItemId, plannedQuantity: editQuantity });
+      showToast('Quantity updated');
+      setEditingPlanId(null);
+      selectBudget(activeBudget.id);
+    } catch (err) {
+      showToast('Error updating plan', 'error');
     }
   };
 
@@ -299,7 +314,18 @@ export default function MonthlyRation({ isAdmin, showToast }) {
                 </div>
                 {isAdmin && (
                   <div className="item-actions no-print">
-                    <button className="btn btn-danger-outline" onClick={() => handleDeletePlan(plan.id)} style={{padding: '4px 10px', fontSize: '0.75rem'}}>Remove</button>
+                    {editingPlanId === plan.id ? (
+                      <>
+                        <input type="number" step="0.01" value={editQuantity} onChange={(e) => setEditQuantity(e.target.value)} style={{ width: '80px', padding: '4px', fontSize: '0.85rem' }} />
+                        <button className="btn btn-success" onClick={() => handleSaveEditPlan(plan.masterItemId)} style={{padding: '4px 10px', fontSize: '0.75rem'}}>Save</button>
+                        <button className="btn btn-ghost" onClick={() => setEditingPlanId(null)} style={{padding: '4px 10px', fontSize: '0.75rem'}}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="btn btn-ghost" onClick={() => { setEditingPlanId(plan.id); setEditQuantity(plan.plannedQuantity); }} style={{padding: '4px 10px', fontSize: '0.75rem'}}>Edit</button>
+                        <button className="btn btn-danger-outline" onClick={() => handleDeletePlan(plan.id)} style={{padding: '4px 10px', fontSize: '0.75rem'}}>Remove</button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
